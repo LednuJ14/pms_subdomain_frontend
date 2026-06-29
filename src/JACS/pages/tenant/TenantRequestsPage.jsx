@@ -1,0 +1,1382 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, Wrench, Plus, Clock, CheckCircle, AlertCircle, Search, Filter, MoreVertical, Calendar, AlertTriangle, Settings, FileText, X, Eye, Upload, Image as ImageIcon, Paperclip, Trash2, Edit3, Download } from 'lucide-react';
+import { apiService } from '../../../services/api';
+import Header from '../../components/Header';
+
+const TenantRequestsPage = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [tenant, setTenant] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [fullRequestData, setFullRequestData] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [editingRequestId, setEditingRequestId] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [newRequest, setNewRequest] = useState({
+    issue: '',
+    issue_category: '',
+    priority_level: 'Medium',
+    description: ''
+  });
+  const [images, setImages] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+
+  // Using centralized mock data for frontend-only mode
+
+  useEffect(() => {
+    if (!apiService.isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+
+    const user = apiService.getStoredUser();
+    if (user && user.role !== 'tenant') {
+      navigate('/dashboard');
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        try {
+          const myTenant = await apiService.getMyTenant();
+          if (myTenant) {
+            setTenant(myTenant);
+            
+            try {
+              const requestsData = await apiService.getMaintenanceRequests(myTenant.id);
+              
+              // Transform API data to match frontend interface
+              const transformedRequests = (requestsData || []).map((request) => {
+                try {
+                  // Map backend status to frontend display status
+                  const backendStatus = (request.status || 'pending').toLowerCase();
+                  let displayStatus = 'Pending';
+                  if (backendStatus === 'in_progress') {
+                    displayStatus = 'In Progress';
+                  } else if (backendStatus === 'completed') {
+                    displayStatus = 'Completed';
+                  } else if (backendStatus === 'cancelled') {
+                    displayStatus = 'Cancelled';
+                  } else if (backendStatus === 'approved' || backendStatus === 'on_hold') {
+                    displayStatus = 'Approved';
+                  }
+
+                  // Parse images and attachments (they're stored as JSON strings)
+                  let parsedImages = [];
+                  let parsedAttachments = [];
+                  try {
+                    if (request.images) {
+                      if (typeof request.images === 'string') {
+                        try {
+                          parsedImages = JSON.parse(request.images);
+                        } catch {
+                          parsedImages = request.images ? [request.images] : [];
+                        }
+                      } else if (Array.isArray(request.images)) {
+                        parsedImages = request.images;
+                      }
+                    }
+                    if (request.attachments) {
+                      if (typeof request.attachments === 'string') {
+                        try {
+                          parsedAttachments = JSON.parse(request.attachments);
+                        } catch {
+                          parsedAttachments = request.attachments ? [request.attachments] : [];
+                        }
+                      } else if (Array.isArray(request.attachments)) {
+                        parsedAttachments = request.attachments;
+                      }
+                    }
+                  } catch (parseErr) {
+                    console.warn('Error parsing images/attachments:', parseErr);
+                  }
+
+                  return {
+                    id: request.id,
+                    request_id: request.request_number || request.request_id || `REQ-${request.id}`,
+                    issue: request.title || request.issue || 'Maintenance Request',
+                    issue_category: request.category || request.issue_category || 'General',
+                    priority_level: request.priority ? 
+                      (request.priority.charAt(0).toUpperCase() + request.priority.slice(1)) : 
+                      'Medium',
+                    status: displayStatus,
+                    backend_status: backendStatus,
+                    description: request.description || '',
+                    created_at: request.created_at || request.date || new Date().toISOString(),
+                    scheduled_date: request.scheduled_date,
+                    actual_completion: request.actual_completion,
+                    assigned_staff: request.assigned_staff,
+                    work_notes: request.work_notes,
+                    resolution_notes: request.resolution_notes,
+                    images: parsedImages,
+                    attachments: parsedAttachments,
+                    _fullData: request // Store full data for view modal
+                  };
+                } catch (err) {
+                  console.error('Error transforming request:', err, request);
+                  // Parse images and attachments for fallback
+                  let parsedImages = [];
+                  let parsedAttachments = [];
+                  try {
+                    if (request?.images) {
+                      if (typeof request.images === 'string') {
+                        try {
+                          parsedImages = JSON.parse(request.images);
+                        } catch {
+                          parsedImages = request.images ? [request.images] : [];
+                        }
+                      } else if (Array.isArray(request.images)) {
+                        parsedImages = request.images;
+                      }
+                    }
+                    if (request?.attachments) {
+                      if (typeof request.attachments === 'string') {
+                        try {
+                          parsedAttachments = JSON.parse(request.attachments);
+                        } catch {
+                          parsedAttachments = request.attachments ? [request.attachments] : [];
+                        }
+                      } else if (Array.isArray(request.attachments)) {
+                        parsedAttachments = request.attachments;
+                      }
+                    }
+                  } catch (parseErr) {
+                    console.warn('Error parsing images/attachments in fallback:', parseErr);
+                  }
+                  
+                  return {
+                    id: request?.id || 0,
+                    request_id: `REQ-${request?.id || 'N/A'}`,
+                    issue: request?.title || request?.issue || 'Maintenance Request',
+                    issue_category: request?.category || 'General',
+                    priority_level: 'Medium',
+                    status: 'Pending',
+                    backend_status: request?.status || 'pending',
+                    description: request?.description || '',
+                    created_at: request?.created_at || new Date().toISOString(),
+                    images: parsedImages,
+                    attachments: parsedAttachments,
+                    _fullData: request
+                  };
+                }
+              });
+              
+              setRequests(Array.isArray(transformedRequests) ? transformedRequests : []);
+            } catch (reqsErr) {
+              console.warn('Requests not available:', reqsErr);
+              setRequests([]);
+            }
+          } else {
+            setTenant(null);
+            setRequests([]);
+          }
+        } catch (tenantErr) {
+          console.warn('No tenant record found:', tenantErr);
+          setTenant(null);
+          setRequests([]);
+        }
+      } catch (err) {
+        console.error('Failed to load requests:', err);
+        setError('Failed to load requests. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
+
+  // Fetch full request details
+  const fetchFullRequestDetails = async (requestId) => {
+    try {
+      const fullData = await apiService.getMaintenanceRequest(requestId);
+      setFullRequestData(fullData);
+      return fullData;
+    } catch (err) {
+      console.error('Failed to fetch full request details:', err);
+      return null;
+    }
+  };
+
+  // Handle view request details
+  const handleViewRequest = async (request) => {
+    setSelectedRequest(request);
+    setShowViewModal(true);
+    // Fetch full details if not already loaded
+    if (!request._fullData || !request._fullData.description) {
+      await fetchFullRequestDetails(request.id);
+    } else {
+      setFullRequestData(request._fullData);
+    }
+  };
+
+  // Refresh requests list
+  const refreshRequests = async () => {
+    if (!tenant) return;
+    try {
+      const requestsData = await apiService.getMaintenanceRequests(tenant.id);
+      
+      // Transform API data
+      const transformedRequests = (requestsData || []).map((request) => {
+        try {
+          const backendStatus = (request.status || 'pending').toLowerCase();
+          let displayStatus = 'Pending';
+          if (backendStatus === 'in_progress') {
+            displayStatus = 'In Progress';
+          } else if (backendStatus === 'completed') {
+            displayStatus = 'Completed';
+          } else if (backendStatus === 'cancelled') {
+            displayStatus = 'Cancelled';
+          } else if (backendStatus === 'approved' || backendStatus === 'on_hold') {
+            displayStatus = 'Approved';
+          }
+
+            // Parse images and attachments
+            let parsedImages = [];
+            let parsedAttachments = [];
+            try {
+              if (request.images) {
+                if (typeof request.images === 'string') {
+                  try {
+                    parsedImages = JSON.parse(request.images);
+                  } catch {
+                    parsedImages = request.images ? [request.images] : [];
+                  }
+                } else if (Array.isArray(request.images)) {
+                  parsedImages = request.images;
+                }
+              }
+              if (request.attachments) {
+                if (typeof request.attachments === 'string') {
+                  try {
+                    parsedAttachments = JSON.parse(request.attachments);
+                  } catch {
+                    parsedAttachments = request.attachments ? [request.attachments] : [];
+                  }
+                } else if (Array.isArray(request.attachments)) {
+                  parsedAttachments = request.attachments;
+                }
+              }
+            } catch (parseErr) {
+              console.warn('Error parsing images/attachments:', parseErr);
+          }
+
+          return {
+            id: request.id,
+            request_id: request.request_number || request.request_id || `REQ-${request.id}`,
+            issue: request.title || request.issue || 'Maintenance Request',
+            issue_category: request.category || request.issue_category || 'General',
+            priority_level: request.priority ? 
+              (request.priority.charAt(0).toUpperCase() + request.priority.slice(1)) : 
+              'Medium',
+            status: displayStatus,
+            backend_status: backendStatus,
+            description: request.description || '',
+            created_at: request.created_at || request.date || new Date().toISOString(),
+            scheduled_date: request.scheduled_date,
+            actual_completion: request.actual_completion,
+            assigned_staff: request.assigned_staff,
+            work_notes: request.work_notes,
+            resolution_notes: request.resolution_notes,
+              images: parsedImages,
+              attachments: parsedAttachments,
+            _fullData: request
+          };
+        } catch (err) {
+          console.error('Error transforming request:', err, request);
+          return {
+            id: request?.id || 0,
+            request_id: `REQ-${request?.id || 'N/A'}`,
+            issue: request?.title || request?.issue || 'Maintenance Request',
+            issue_category: request?.category || 'General',
+            priority_level: 'Medium',
+            status: 'Pending',
+            backend_status: request?.status || 'pending',
+            description: request?.description || '',
+            created_at: request?.created_at || new Date().toISOString(),
+            _fullData: request
+          };
+        }
+      });
+      
+      setRequests(Array.isArray(transformedRequests) ? transformedRequests : []);
+    } catch (err) {
+      console.error('Failed to refresh requests:', err);
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload only image files');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImages(prev => [...prev, {
+          name: file.name,
+          data: reader.result,
+          type: file.type
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAttachmentUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAttachments(prev => [...prev, {
+          name: file.name,
+          data: reader.result,
+          type: file.type
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCreateRequest = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      setError(null);
+      setSuccessMessage('');
+      
+      if (!tenant) {
+        setError('Tenant profile not found. Please try logging in again.');
+        return;
+      }
+
+      // Derive unit from tenant record if available; backend now also resolves unit_id
+      // Try multiple paths to get unit_id from tenant's current_rent
+      let unitId = null;
+
+      // Debug: Log tenant structure to understand data format
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Tenant data structure:', {
+          tenant_id: tenant?.id,
+          property_id: tenant?.property_id,
+          current_rent: tenant?.current_rent,
+          unit_id: tenant?.unit_id,
+          unit: tenant?.unit
+        });
+      }
+      
+      // First, try to get from current_rent (most reliable)
+      if (tenant?.current_rent) {
+        unitId = tenant.current_rent.unit_id || 
+                 tenant.current_rent.unit?.id ||
+                 null;
+      }
+      
+      // Fallback: try direct tenant properties
+      if (!unitId) {
+        unitId = tenant?.unit_id || 
+                 tenant?.unit?.id ||
+                 null;
+      }
+
+      // Prepare images and attachments data
+      const imagesData = images.length > 0 ? JSON.stringify(images.map(img => ({
+        name: img.name,
+        data: img.data,
+        type: img.type
+      }))) : null;
+
+      const attachmentsData = attachments.length > 0 ? JSON.stringify(attachments.map(att => ({
+        name: att.name,
+        data: att.data,
+        type: att.type
+      }))) : null;
+
+      // Map frontend fields to backend format
+      // Note: Backend will get property_id from unit, so we don't need to send it
+      const requestPayload = {
+        title: newRequest.issue,
+        description: newRequest.description,
+        category: newRequest.issue_category.toLowerCase(),
+        priority: newRequest.priority_level.toLowerCase(),
+        // Send unit_id if we have it; backend can also resolve from tenant_units
+        ...(unitId ? { unit_id: unitId } : {}),
+        // Only send images/attachments if provided to avoid overwriting existing ones on edit
+        ...(imagesData ? { images: imagesData } : {}),
+        ...(attachmentsData ? { attachments: attachmentsData } : {})
+      };
+      
+      // Debug: Log the payload being sent
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Creating maintenance request with payload:', {
+          ...requestPayload,
+          images: imagesData ? `${images.length} image(s)` : 'none',
+          attachments: attachmentsData ? `${attachments.length} attachment(s)` : 'none'
+        });
+      }
+      
+      if (editingRequestId) {
+        await apiService.updateMaintenanceRequest(editingRequestId, requestPayload);
+        setSuccessMessage('Maintenance request updated successfully!');
+      } else {
+        await apiService.createMaintenanceRequest(requestPayload);
+        setSuccessMessage('Maintenance request submitted successfully!');
+      }
+
+      setShowCreateForm(false);
+      setNewRequest({ issue: '', issue_category: '', priority_level: 'Medium', description: '' });
+      setImages([]);
+      setAttachments([]);
+      setEditingRequestId(null);
+      
+      // Refresh the requests list
+      await refreshRequests();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      console.error('Failed to create request:', err);
+      setError(err?.message || err?.error || 'Failed to submit request. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditRequest = async (request) => {
+    try {
+      const cat = (request.category || request.issue_category || '').toLowerCase();
+      const prio = (request.priority || request.priority_level || 'Medium');
+      setNewRequest({
+        issue: request.title || request.issue || '',
+        issue_category: cat || '',
+        priority_level: prio.charAt(0).toUpperCase() + prio.slice(1),
+        description: request.description || ''
+      });
+      
+      // Load existing images and attachments from request
+      let existingImages = [];
+      let existingAttachments = [];
+      try {
+        // Try to get from _fullData first, then from request directly
+        const requestData = request._fullData || request;
+        if (requestData.images) {
+          if (typeof requestData.images === 'string') {
+            try {
+              existingImages = JSON.parse(requestData.images);
+            } catch {
+              existingImages = requestData.images ? [requestData.images] : [];
+            }
+          } else if (Array.isArray(requestData.images)) {
+            existingImages = requestData.images;
+          }
+        } else if (request.images) {
+          existingImages = request.images;
+        }
+        
+        if (requestData.attachments) {
+          if (typeof requestData.attachments === 'string') {
+            try {
+              existingAttachments = JSON.parse(requestData.attachments);
+            } catch {
+              existingAttachments = requestData.attachments ? [requestData.attachments] : [];
+            }
+          } else if (Array.isArray(requestData.attachments)) {
+            existingAttachments = requestData.attachments;
+          }
+        } else if (request.attachments) {
+          existingAttachments = request.attachments;
+        }
+      } catch (parseErr) {
+        console.warn('Error parsing existing images/attachments for edit:', parseErr);
+      }
+      
+      // Convert to format expected by the form (with name, data, type)
+      const formattedImages = existingImages.map((img, idx) => {
+        if (typeof img === 'string') {
+          return {
+            name: `Image ${idx + 1}`,
+            data: img,
+            type: 'image/jpeg'
+          };
+        }
+        return img;
+      });
+      
+      const formattedAttachments = existingAttachments.map((att, idx) => {
+        if (typeof att === 'string') {
+          return {
+            name: `Attachment ${idx + 1}`,
+            data: att,
+            type: 'application/octet-stream'
+          };
+        }
+        return att;
+      });
+      
+      setImages(formattedImages);
+      setAttachments(formattedAttachments);
+      setEditingRequestId(request.id);
+      setShowCreateForm(true);
+      setError(null);
+      setSuccessMessage('');
+    } catch (err) {
+      console.error('Failed to prepare edit request:', err);
+      setError('Failed to load request for editing. Please try again.');
+    }
+  };
+
+  const handleDeleteRequest = async (requestId) => {
+    if (!window.confirm('Delete this request? This cannot be undone.')) return;
+    try {
+      setSubmitting(true);
+      setError(null);
+      await apiService.deleteMaintenanceRequest(requestId);
+      await refreshRequests();
+      setSuccessMessage('Request deleted successfully.');
+      setTimeout(() => setSuccessMessage(''), 2500);
+    } catch (err) {
+      console.error('Failed to delete request:', err);
+      setError(err?.message || err?.error || 'Failed to delete request. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Loading your requests...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const getStatusColor = (status) => {
+    const statusLower = (status || '').toLowerCase();
+    if (statusLower === 'completed') return 'text-green-600 bg-green-50';
+    if (statusLower === 'in progress') return 'text-blue-600 bg-blue-50';
+    if (statusLower === 'pending') return 'text-amber-600 bg-amber-50';
+    if (statusLower === 'cancelled' || statusLower === 'disapproved') return 'text-red-600 bg-red-50';
+    if (statusLower === 'approved') return 'text-blue-600 bg-blue-50';
+    return 'text-gray-600 bg-gray-50';
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'High': return 'text-red-600 bg-red-50';
+      case 'Medium': return 'text-amber-600 bg-amber-50';
+      case 'Low': return 'text-green-600 bg-green-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const openRequests = requests.filter(r => r.status !== 'Completed').length;
+  const completedRequests = requests.filter(r => r.status === 'Completed').length;
+
+  // Filter requests based on search, status, and priority
+  const filteredRequests = requests.filter(request => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm || 
+                         (request.issue || '').toLowerCase().includes(searchLower) ||
+                         (request.description || '').toLowerCase().includes(searchLower) ||
+                         (request.issue_category || '').toLowerCase().includes(searchLower);
+    
+    const matchesStatus = statusFilter === 'all' || 
+                         (request.status || '').toLowerCase() === statusFilter.toLowerCase() ||
+                         (request.backend_status || '').toLowerCase() === statusFilter.toLowerCase();
+    
+    const matchesPriority = priorityFilter === 'all' || 
+                           (request.priority_level || '').toLowerCase() === priorityFilter.toLowerCase();
+    
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case 'High': return <AlertTriangle className="w-4 h-4 text-red-600" />;
+      case 'Medium': return <Clock className="w-4 h-4 text-amber-600" />;
+      case 'Low': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      default: return <Clock className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
+      <Header userType="tenant" />
+      
+      <div className="px-4 py-8 w-full">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Maintenance Requests</h1>
+              <p className="text-gray-600">Submit and track your maintenance requests</p>
+            </div>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              disabled={!tenant}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <Plus className="w-5 h-5" />
+              <span>New Request</span>
+            </button>
+          </div>
+
+          {/* No Tenant Record Message removed for frontend-only demo */}
+
+          {/* Success/Error Messages */}
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+              {successMessage}
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Open Requests</p>
+                  <p className="text-2xl font-bold text-gray-900">{openRequests}</p>
+                  <p className="text-xs text-gray-500 mt-1">awaiting action</p>
+                </div>
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <Wrench className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
+                  <p className="text-2xl font-bold text-green-600">{completedRequests}</p>
+                  <p className="text-xs text-gray-500 mt-1">resolved</p>
+                </div>
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Requests</p>
+                  <p className="text-2xl font-bold text-gray-900">{requests.length}</p>
+                  <p className="text-xs text-gray-500 mt-1">all requests</p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <FileText className="w-6 h-6 text-gray-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">High Priority</p>
+                  <p className="text-2xl font-bold text-red-600">{requests.filter(r => r.priority_level === 'High').length}</p>
+                  <p className="text-xs text-gray-500 mt-1">urgent issues</p>
+                </div>
+                <div className="p-3 bg-red-50 rounded-lg">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search requests..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="in progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Create Request Form Modal */}
+          {showCreateForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] mx-4 shadow-2xl flex flex-col">
+                <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900">Create New Request</h2>
+                    <button
+                      onClick={() => {
+                        setShowCreateForm(false);
+                        setError(null);
+                        setNewRequest({ issue: '', issue_category: '', priority_level: 'Medium', description: '' });
+                        setImages([]);
+                        setAttachments([]);
+                      }}
+                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+                
+                <form onSubmit={handleCreateRequest} className="p-6 space-y-6 overflow-y-auto flex-1">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Issue Title</label>
+                    <input
+                      type="text"
+                      value={newRequest.issue}
+                      onChange={(e) => setNewRequest({...newRequest, issue: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Brief description of the issue"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                      <select
+                        value={newRequest.issue_category}
+                        onChange={(e) => setNewRequest({...newRequest, issue_category: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      >
+                        <option value="">Select category</option>
+                        <option value="plumbing">Plumbing</option>
+                        <option value="electrical">Electrical</option>
+                        <option value="hvac">HVAC</option>
+                        <option value="appliance">Appliance</option>
+                        <option value="carpentry">Carpentry</option>
+                        <option value="painting">Painting</option>
+                        <option value="cleaning">Cleaning</option>
+                        <option value="pest_control">Pest Control</option>
+                        <option value="security">Security</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                      <select
+                        value={newRequest.priority_level}
+                        onChange={(e) => setNewRequest({...newRequest, priority_level: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="High">High Priority</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea
+                      value={newRequest.description}
+                      onChange={(e) => setNewRequest({...newRequest, description: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows="4"
+                      placeholder="Provide detailed information about the issue..."
+                      required
+                    />
+                  </div>
+
+                  {/* Images Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Images <span className="text-gray-500 text-xs">(Optional)</span>
+                    </label>
+                    <div className={`border-2 border-dashed rounded-xl p-4 transition-colors ${
+                      images.length > 0 
+                        ? 'border-green-300 bg-green-50' 
+                        : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                    }`}>
+                      {images.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <ImageIcon className="w-5 h-5 text-green-600" />
+                              <p className="text-sm font-medium text-green-700">{images.length} image{images.length > 1 ? 's' : ''} uploaded</p>
+                            </div>
+                            <label className="cursor-pointer text-xs text-blue-600 hover:text-blue-700 font-medium">
+                              Add More
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleImageUpload}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {images.map((img, index) => (
+                              <div key={index} className="relative group">
+                                <img 
+                                  src={img.data} 
+                                  alt={img.name}
+                                  className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(index)}
+                                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Remove image"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                                <p className="text-xs text-gray-600 mt-1 truncate">{img.name}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer block text-center">
+                          <div className="flex flex-col items-center">
+                            <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
+                            <span className="text-sm text-blue-600 hover:text-blue-700 font-medium">Click to upload images</span>
+                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB each</p>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Attachments Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Attachments <span className="text-gray-500 text-xs">(Optional)</span>
+                    </label>
+                    <div className={`border-2 border-dashed rounded-xl p-4 transition-colors ${
+                      attachments.length > 0 
+                        ? 'border-green-300 bg-green-50' 
+                        : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                    }`}>
+                      {attachments.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <Paperclip className="w-5 h-5 text-green-600" />
+                              <p className="text-sm font-medium text-green-700">{attachments.length} file{attachments.length > 1 ? 's' : ''} attached</p>
+                            </div>
+                            <label className="cursor-pointer text-xs text-blue-600 hover:text-blue-700 font-medium">
+                              Add More
+                              <input
+                                type="file"
+                                multiple
+                                onChange={handleAttachmentUpload}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          <div className="space-y-2">
+                            {attachments.map((att, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200">
+                                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                  <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                  <p className="text-sm text-gray-700 truncate">{att.name}</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeAttachment(index)}
+                                  className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                                  title="Remove attachment"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer block text-center">
+                          <div className="flex flex-col items-center">
+                            <Paperclip className="w-8 h-8 text-gray-400 mb-2" />
+                            <span className="text-sm text-blue-600 hover:text-blue-700 font-medium">Click to upload attachments</span>
+                            <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, etc. up to 10MB each</p>
+                          </div>
+                          <input
+                            type="file"
+                            multiple
+                            onChange={handleAttachmentUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCreateForm(false);
+                        setError(null);
+                        setNewRequest({ issue: '', issue_category: '', priority_level: 'Medium', description: '' });
+                        setImages([]);
+                        setAttachments([]);
+                      }}
+                      disabled={submitting}
+                      className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl hover:bg-gray-200 disabled:opacity-50 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="flex-1 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 transition-colors font-medium"
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Submitting...</span>
+                        </>
+                      ) : (
+                        'Submit Request'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Requests List */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Request History</h2>
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <span>{filteredRequests.length} of {requests.length} requests</span>
+                </div>
+              </div>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {filteredRequests.length === 0 ? (
+                <div className="px-6 py-12 text-center text-gray-500">
+                  <Wrench className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium mb-2">No requests found</p>
+                  <p className="text-sm">Click "New Request" to create your first maintenance request</p>
+                </div>
+              ) : (
+                filteredRequests.map((request) => (
+                  <div key={request.id} className="px-6 py-4 hover:bg-gray-50 transition-colors group">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${request.priority_level === 'High' ? 'bg-red-50' : request.priority_level === 'Medium' ? 'bg-amber-50' : 'bg-green-50'}`}>
+                          {getPriorityIcon(request.priority_level)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="font-semibold text-gray-900">{request.issue}</h3>
+                            <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(request.priority_level)}`}>
+                              {request.priority_level}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{request.description}</p>
+                          <div className="flex items-center space-x-4 text-sm text-gray-500">
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="w-4 h-4" />
+                              <span>{new Date(request.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-gray-500">{request.issue_category}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="text-right">
+                          <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(request.status)}`}>
+                            {request.status}
+                          </span>
+                          {request.status === 'Completed' && (
+                            <div className="flex items-center space-x-1 text-green-600 mt-2">
+                              <CheckCircle className="w-4 h-4" />
+                              <span className="text-xs">Resolved</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={() => handleViewRequest(request)}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
+                            title="View details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEditRequest(request)}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
+                            title="Edit request"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRequest(request.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
+                            title="Delete request"
+                            disabled={submitting}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* View Request Details Modal */}
+      {showViewModal && selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <h2 className="text-2xl font-bold text-gray-900">Request Details</h2>
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedRequest(null);
+                  setFullRequestData(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {fullRequestData ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Request Number</h3>
+                      <p className="text-lg font-semibold text-gray-900">{fullRequestData.request_number || selectedRequest.request_id}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Status</h3>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedRequest.status)}`}>
+                        {selectedRequest.status}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Issue</h3>
+                      <p className="text-lg font-semibold text-gray-900">{fullRequestData.title || selectedRequest.issue}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Category</h3>
+                      <p className="text-lg font-semibold text-gray-900 capitalize">{fullRequestData.category || selectedRequest.issue_category}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Priority</h3>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(selectedRequest.priority_level)}`}>
+                        {fullRequestData.priority ? (fullRequestData.priority.charAt(0).toUpperCase() + fullRequestData.priority.slice(1)) : selectedRequest.priority_level}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Created Date</h3>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {selectedRequest.created_at ? new Date(selectedRequest.created_at).toLocaleString() : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {fullRequestData.description && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
+                      <p className="text-gray-900 whitespace-pre-wrap">{fullRequestData.description}</p>
+                    </div>
+                  )}
+
+                  {fullRequestData.assigned_staff && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Assigned Staff</h3>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {fullRequestData.assigned_staff.user?.first_name} {fullRequestData.assigned_staff.user?.last_name}
+                      </p>
+                    </div>
+                  )}
+
+                  {fullRequestData.scheduled_date && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Scheduled Date</h3>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {new Date(fullRequestData.scheduled_date).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {fullRequestData.work_notes && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Work Notes</h3>
+                      <p className="text-gray-900 whitespace-pre-wrap">{fullRequestData.work_notes}</p>
+                    </div>
+                  )}
+
+                  {fullRequestData.resolution_notes && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">Resolution Notes</h3>
+                      <p className="text-gray-900 whitespace-pre-wrap">{fullRequestData.resolution_notes}</p>
+                    </div>
+                  )}
+
+                  {fullRequestData.actual_completion && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">Completed Date</h3>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {new Date(fullRequestData.actual_completion).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Images Section */}
+                  {(() => {
+                    let images = [];
+                    try {
+                      if (fullRequestData.images) {
+                        if (typeof fullRequestData.images === 'string') {
+                          try {
+                            images = JSON.parse(fullRequestData.images);
+                          } catch {
+                            images = fullRequestData.images ? [fullRequestData.images] : [];
+                          }
+                        } else if (Array.isArray(fullRequestData.images)) {
+                          images = fullRequestData.images;
+                        }
+                      } else if (selectedRequest?.images) {
+                        images = selectedRequest.images;
+                      }
+                    } catch (err) {
+                      console.warn('Error parsing images:', err);
+                    }
+                    
+                    if (images && images.length > 0) {
+                      return (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500 mb-3">Images</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {images.map((image, idx) => {
+                              // Handle both base64 strings and objects with data/name properties
+                              const imageData = typeof image === 'string' ? image : (image.data || image);
+                              const imageName = typeof image === 'object' && image.name ? image.name : `Image ${idx + 1}`;
+                              
+                              return (
+                                <div key={idx} className="relative group">
+                                  <img
+                                    src={imageData}
+                                    alt={imageName}
+                                    className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                    onClick={() => {
+                                      // Open image in new window for full view
+                                      const newWindow = window.open();
+                                      if (newWindow) {
+                                        newWindow.document.write(`
+                                          <html>
+                                            <head><title>${imageName}</title></head>
+                                            <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#000;">
+                                              <img src="${imageData}" style="max-width:100%;max-height:100vh;object-fit:contain;" alt="${imageName}" />
+                                            </body>
+                                          </html>
+                                        `);
+                                      }
+                                    }}
+                                  />
+                                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg truncate">
+                                    {imageName}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Attachments Section */}
+                  {(() => {
+                    let attachments = [];
+                    try {
+                      if (fullRequestData.attachments) {
+                        if (typeof fullRequestData.attachments === 'string') {
+                          try {
+                            attachments = JSON.parse(fullRequestData.attachments);
+                          } catch {
+                            attachments = fullRequestData.attachments ? [fullRequestData.attachments] : [];
+                          }
+                        } else if (Array.isArray(fullRequestData.attachments)) {
+                          attachments = fullRequestData.attachments;
+                        }
+                      } else if (selectedRequest?.attachments) {
+                        attachments = selectedRequest.attachments;
+                      }
+                    } catch (err) {
+                      console.warn('Error parsing attachments:', err);
+                    }
+                    
+                    if (attachments && attachments.length > 0) {
+                      return (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500 mb-3">Attachments</h3>
+                          <div className="space-y-2">
+                            {attachments.map((attachment, idx) => {
+                              // Handle both base64 strings and objects with data/name/type properties
+                              const attachmentData = typeof attachment === 'string' ? attachment : (attachment.data || attachment);
+                              const attachmentName = typeof attachment === 'object' && attachment.name ? attachment.name : `Attachment ${idx + 1}`;
+                              const attachmentType = typeof attachment === 'object' && attachment.type ? attachment.type : 'application/octet-stream';
+                              
+                              return (
+                                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                  <div className="flex items-center space-x-3">
+                                    <FileText className="w-5 h-5 text-gray-400" />
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-900">{attachmentName}</p>
+                                      <p className="text-xs text-gray-500">{attachmentType}</p>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      // Download attachment
+                                      try {
+                                        // If it's base64, convert to blob and download
+                                        if (attachmentData.startsWith('data:')) {
+                                          const response = fetch(attachmentData);
+                                          response.then(res => res.blob()).then(blob => {
+                                            const url = window.URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = attachmentName;
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
+                                            window.URL.revokeObjectURL(url);
+                                          });
+                                        } else {
+                                          // Direct download
+                                          const a = document.createElement('a');
+                                          a.href = attachmentData;
+                                          a.download = attachmentName;
+                                          document.body.appendChild(a);
+                                          a.click();
+                                          document.body.removeChild(a);
+                                        }
+                                      } catch (err) {
+                                        console.error('Error downloading attachment:', err);
+                                        alert('Failed to download attachment');
+                                      }
+                                    }}
+                                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    <span>Download</span>
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </>
+              ) : (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-600">Loading request details...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default TenantRequestsPage;
