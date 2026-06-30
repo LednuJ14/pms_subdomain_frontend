@@ -50,13 +50,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				jacs: {
-					dark: 'hsl(var(--jacs-dark))',
-					'dark-foreground': 'hsl(var(--jacs-dark-foreground))',
-					accent: 'hsl(var(--jacs-accent))',
-					'accent-foreground': 'hsl(var(--jacs-accent-foreground))',
-					light: 'hsl(var(--jacs-light))',
-					'light-foreground': 'hsl(var(--jacs-light-foreground))'
+				pms: {
+					dark: 'hsl(var(--pms-dark))',
+					'dark-foreground': 'hsl(var(--pms-dark-foreground))',
+					accent: 'hsl(var(--pms-accent))',
+					'accent-foreground': 'hsl(var(--pms-accent-foreground))',
+					light: 'hsl(var(--pms-light))',
+					'light-foreground': 'hsl(var(--pms-light-foreground))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

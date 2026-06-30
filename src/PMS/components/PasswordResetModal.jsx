@@ -125,7 +125,7 @@ const PasswordResetModal = ({ isOpen, onClose, token }) => {
 
           <Button
             onClick={handleClose}
-            className="w-full h-12 bg-jacs-dark hover:bg-jacs-dark/90 text-white font-medium rounded-lg transition-all duration-300"
+            className="w-full h-12 bg-pms-dark hover:bg-pms-dark/90 text-white font-medium rounded-lg transition-all duration-300"
           >
             Continue to Login
           </Button>
@@ -191,7 +191,7 @@ const PasswordResetModal = ({ isOpen, onClose, token }) => {
                     placeholder="Enter new password"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="h-12 border-gray-200 bg-white pl-4 pr-12 focus:border-jacs-dark focus:ring-jacs-dark/20"
+                    className="h-12 border-gray-200 bg-white pl-4 pr-12 focus:border-pms-dark focus:ring-pms-dark/20"
                     required
                     minLength={8}
                   />
@@ -217,7 +217,7 @@ const PasswordResetModal = ({ isOpen, onClose, token }) => {
                     placeholder="Confirm new password"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className="h-12 border-gray-200 bg-white pl-4 pr-12 focus:border-jacs-dark focus:ring-jacs-dark/20"
+                    className="h-12 border-gray-200 bg-white pl-4 pr-12 focus:border-pms-dark focus:ring-pms-dark/20"
                     required
                     minLength={8}
                   />
@@ -234,7 +234,7 @@ const PasswordResetModal = ({ isOpen, onClose, token }) => {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-12 bg-jacs-dark hover:bg-jacs-dark/90 text-white font-medium rounded-lg transition-all duration-300"
+                className="w-full h-12 bg-pms-dark hover:bg-pms-dark/90 text-white font-medium rounded-lg transition-all duration-300"
                 disabled={isLoading}
               >
                 {isLoading ? 'RESETTING...' : 'Reset Password'}

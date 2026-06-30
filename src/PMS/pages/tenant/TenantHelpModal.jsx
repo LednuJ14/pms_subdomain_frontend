@@ -118,7 +118,7 @@ const TenantHelpModal = ({ isOpen, onClose }) => {
       type: 'email',
       title: 'Email Support',
       description: 'Send us an email for detailed inquiries',
-      contact: 'support@jacs.com',
+      contact: 'support@pms.com',
       hours: 'Response within 24 hours',
       icon: Mail,
       color: 'bg-blue-100 text-blue-600'

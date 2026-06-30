@@ -92,7 +92,7 @@ const ResetPassword = ({ onSuccess }) => {
 
         <Button
           onClick={onSuccess}
-          className="w-full h-12 bg-jacs-dark hover:bg-jacs-dark/90 text-white font-medium rounded-lg transition-all duration-300"
+          className="w-full h-12 bg-pms-dark hover:bg-pms-dark/90 text-white font-medium rounded-lg transition-all duration-300"
         >
           Go to Login
         </Button>
@@ -123,7 +123,7 @@ const ResetPassword = ({ onSuccess }) => {
 
         <Button
           onClick={onSuccess}
-          className="w-full h-12 bg-jacs-dark hover:bg-jacs-dark/90 text-white font-medium rounded-lg transition-all duration-300"
+          className="w-full h-12 bg-pms-dark hover:bg-pms-dark/90 text-white font-medium rounded-lg transition-all duration-300"
         >
           Back to Login
         </Button>
@@ -222,7 +222,7 @@ const ResetPassword = ({ onSuccess }) => {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full h-12 bg-jacs-dark hover:bg-jacs-dark/90 text-white font-medium rounded-lg transition-all duration-300"
+          className="w-full h-12 bg-pms-dark hover:bg-pms-dark/90 text-white font-medium rounded-lg transition-all duration-300"
           disabled={isLoading}
         >
           {isLoading ? 'RESETTING...' : 'Reset Password'}
@@ -234,7 +234,7 @@ const ResetPassword = ({ onSuccess }) => {
           <button
             type="button"
             onClick={onSuccess}
-            className="text-jacs-accent hover:text-jacs-accent/80 font-medium transition-colors"
+            className="text-pms-accent hover:text-pms-accent/80 font-medium transition-colors"
           >
             Back to Login
           </button>

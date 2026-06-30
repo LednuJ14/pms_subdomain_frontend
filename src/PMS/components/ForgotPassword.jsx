@@ -71,7 +71,7 @@ const ForgotPassword = ({ onBack }) => {
           <h3 className="font-medium text-blue-900 mb-2">What to do next:</h3>
           <ol className="text-sm text-blue-800 space-y-1">
             <li>1. Check your Gmail inbox</li>
-            <li>2. Look for an email from JACS</li>
+            <li>2. Look for an email from PMS</li>
             <li>3. Click the password reset link</li>
             <li>4. Create a new password</li>
           </ol>
@@ -83,7 +83,7 @@ const ForgotPassword = ({ onBack }) => {
             setEmail('');
             setError(null);
           }}
-          className="w-full h-12 bg-jacs-dark hover:bg-jacs-dark/90 text-white font-medium rounded-lg transition-all duration-300"
+          className="w-full h-12 bg-pms-dark hover:bg-pms-dark/90 text-white font-medium rounded-lg transition-all duration-300"
         >
           Send Another Email
         </Button>
@@ -151,7 +151,7 @@ const ForgotPassword = ({ onBack }) => {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full h-12 bg-jacs-dark hover:bg-jacs-dark/90 text-white font-medium rounded-lg transition-all duration-300"
+          className="w-full h-12 bg-pms-dark hover:bg-pms-dark/90 text-white font-medium rounded-lg transition-all duration-300"
           disabled={isLoading}
         >
           {isLoading ? 'SENDING...' : 'Send Reset Link'}
@@ -163,7 +163,7 @@ const ForgotPassword = ({ onBack }) => {
           <button
             type="button"
             onClick={onBack}
-            className="text-jacs-accent hover:text-jacs-accent/80 font-medium transition-colors"
+            className="text-pms-accent hover:text-pms-accent/80 font-medium transition-colors"
           >
             Back to Login
           </button>

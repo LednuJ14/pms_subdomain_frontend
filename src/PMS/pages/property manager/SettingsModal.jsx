@@ -1483,16 +1483,16 @@ const SettingsModal = ({ isOpen, onClose, currentUser, isTenant = false }) => {
                               <p className="uppercase text-xs tracking-[0.4em] text-white/70">
                                 Property Portal
                               </p>
-                              <p className="text-xl font-semibold">{property?.name || property?.property_name || property?.title || property?.building_name || 'JACS'}</p>
+                              <p className="text-xl font-semibold">{property?.name || property?.property_name || property?.title || property?.building_name || 'PMS'}</p>
                             </div>
                           </div>
                           
                           {/* Welcome Message */}
                           <div className="text-white space-y-4">
                             <h1 className="text-4xl font-bold leading-tight">
-                              Welcome to {property?.name || property?.property_name || property?.title || property?.building_name || 'JACS'}
+                              Welcome to {property?.name || property?.property_name || property?.title || property?.building_name || 'PMS'}
                             </h1>
-                            <p className="text-xl opacity-90 font-light">by JACS</p>
+                            <p className="text-xl opacity-90 font-light">by PMS</p>
                           </div>
                         </div>
 

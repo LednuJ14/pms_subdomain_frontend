@@ -307,7 +307,7 @@ const LoginPage = () => {
                   Welcome to {propertyName}
                 </h1>
                 <p className="text-xl opacity-90 font-light animate-in slide-in-from-bottom-4 duration-700 delay-400">
-                  by JACS
+                  by PMS
                 </p>
               </div>
             </div>

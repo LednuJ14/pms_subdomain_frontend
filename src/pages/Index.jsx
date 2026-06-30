@@ -1,4 +1,4 @@
-import LoginPage from '@/JACS/pages/LoginPage';
+import LoginPage from '@/PMS/pages/LoginPage';
 
 const Index = () => {
   return <LoginPage />;
