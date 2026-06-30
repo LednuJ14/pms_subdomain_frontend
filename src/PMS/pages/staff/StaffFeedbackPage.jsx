@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, MessageSquare, AlertTriangle, CheckCircle, Clock, Filter, Search, Plus, Eye, X, Star, FileText } from 'lucide-react';
 import { apiService } from '../../../services/api';
-import Header from '../../components/Header';
-
 const StaffFeedbackPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -181,7 +179,7 @@ const StaffFeedbackPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full flex items-center justify-center">
+      <div className="w-full flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading feedback...</p>
@@ -191,9 +189,7 @@ const StaffFeedbackPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      <Header userType="staff" />
-      
+    <div className="w-full">
       <div className="px-4 py-8 w-full">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header Section */}

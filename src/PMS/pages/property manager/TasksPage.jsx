@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, X, Edit2, Eye } from 'lucide-react';
-import Header from '../../components/Header';
+import { Loader2, X, Edit2, Eye, Plus } from 'lucide-react';
 import { apiService } from '../../../services/api';
 
 const mockTemplates = [
@@ -463,7 +462,7 @@ const TasksPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>Loading tasks...</span>
@@ -474,7 +473,7 @@ const TasksPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Retry</button>
@@ -484,20 +483,21 @@ const TasksPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      <Header userType="manager" />
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Page Header */}
-          <div className="flex items-start justify-between gap-4">
+    <div className="w-full animate-in fade-in duration-500">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-left-4 duration-500">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>
-              <p className="text-gray-600">Assign and track staff tasks with backend integration.</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Task Management</h1>
+              <p className="text-gray-600">Manage and assign tasks to staff members</p>
             </div>
             <button
               onClick={handleOpenModal}
-              className="h-10 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm shadow-sm"
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 flex items-center space-x-2 shadow-sm hover:shadow-md transition-all duration-200"
             >
-              + Assign Task
+              <Plus className="w-5 h-5" />
+              <span>Create Task</span>
             </button>
           </div>
 
@@ -1035,6 +1035,7 @@ const TasksPage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

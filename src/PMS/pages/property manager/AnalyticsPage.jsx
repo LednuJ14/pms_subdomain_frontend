@@ -14,7 +14,6 @@ import {
   Clock,
   Activity
 } from 'lucide-react';
-import Header from '../../components/Header';
 import { apiService } from '../../../services/api';
 
 const AnalyticsPage = () => {
@@ -341,7 +340,7 @@ const AnalyticsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
           <span className="text-gray-600 font-medium">Loading analytics data...</span>
@@ -352,7 +351,7 @@ const AnalyticsPage = () => {
 
   if (error && !data) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Analytics</h2>
@@ -371,13 +370,11 @@ const AnalyticsPage = () => {
   const { propertyName, metrics } = data || {};
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 w-full">
-      <Header userType="manager" />
-
+    <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 w-full animate-in fade-in duration-500">
       <div className="px-4 py-6 sm:px-6 lg:px-8 w-full">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header Section */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 animate-in slide-in-from-left-4 duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Property Analytics</h1>

@@ -287,7 +287,7 @@ const StaffTasksPage = () => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>Loading tasks...</span>
@@ -298,8 +298,7 @@ const StaffTasksPage = () => {
 
   if (error && tasks.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-        <Header userType="staff" />
+      <div className="w-full">
         <main className="px-4 py-8 w-full">
           <div className="max-w-7xl mx-auto">
             <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
@@ -318,8 +317,7 @@ const StaffTasksPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      <Header userType="staff" />
+    <div className="w-full">
       <main className="px-4 py-8 w-full">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

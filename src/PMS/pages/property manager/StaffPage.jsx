@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { User, Building, Phone, Mail, Calendar, Search, Filter, Plus, Edit, Trash2, ChevronDown, Settings, LogOut, X, Briefcase, Clock, MoreVertical, Eye, CheckCircle, AlertTriangle, ArrowRight, Users, Home, CreditCard, MessageSquare, Wrench, Activity, RefreshCw } from 'lucide-react';
 import { apiService } from '../../../services/api';
 import { useProperty } from '../../components/PropertyContext';
-import Header from '../../components/Header';
-
 const StaffPage = () => {
   const { property } = useProperty();
   
@@ -214,7 +212,7 @@ const StaffPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading staff...</p>
@@ -225,8 +223,7 @@ const StaffPage = () => {
 
   if (!staffEnabled) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header userType="manager" />
+      <div className="bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 py-16">
           <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
             <Users className="w-10 h-10 mx-auto text-gray-400 mb-4" />
@@ -246,7 +243,7 @@ const StaffPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -261,28 +258,22 @@ const StaffPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      {/* Header */}
-      <Header userType="manager" />
-
-      {/* Main Content */}
-      <div className="px-4 py-8">
+    <div className="w-full animate-in fade-in duration-500">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-left-4 duration-500">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Management</h1>
-              <p className="text-gray-600">Manage and monitor all staff members in your organization</p>
+              <p className="text-gray-600">Manage property staff, roles, and assignments</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <button 
-                onClick={handleAddStaff}
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 flex items-center space-x-2 shadow-sm hover:shadow-md transition-all duration-200"
-              >
-                <Plus className="w-5 h-5" />
-                <span>Add New Staff</span>
-              </button>
-            </div>
+            <button
+              onClick={handleAddStaff}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 flex items-center space-x-2 shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add Staff</span>
+            </button>
           </div>
 
           {/* Filters and Search */}

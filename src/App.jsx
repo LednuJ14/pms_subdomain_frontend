@@ -25,17 +25,19 @@ import AnalyticsPage from './PMS/pages/property manager/AnalyticsPage';
 import TasksPage from './PMS/pages/property manager/TasksPage';
 import RouteProtection from './PMS/components/RouteProtection';
 import SimpleRouteProtection from './PMS/components/SimpleRouteProtection';
+import MainLayout from './PMS/components/MainLayout';
 import './App.css';
 
 function App() {
   return (
     <Router future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-      <div className="App w-full">
+      <div className="App w-full h-screen overflow-hidden">
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/login" element={<LoginPage />} />
           
-          {/* Property Manager Routes */}
+          <Route element={<MainLayout />}>
+            {/* Property Manager Routes */}
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/bills" element={<BillsPage />} />
             <Route path="/requests" element={<RequestsPage />} />
@@ -46,6 +48,8 @@ function App() {
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/staffs" element={<StaffPage />} />
             <Route path="/tenants" element={<TenantsPage />} />
+            
+            {/* Staff Routes */}
             <Route path="/staff" element={<StaffDashboardPage />} />
             <Route path="/staff/tasks" element={<StaffTasksPage />} />
             <Route path="/staff/requests" element={<StaffRequestsPage />} />
@@ -53,14 +57,14 @@ function App() {
             <Route path="/staff/documents" element={<StaffDocumentsPage />} />
             <Route path="/staff/feedback" element={<StaffFeedbackPage />} />
           
-          {/* Tenant Routes */}
-          <Route path="/tenant" element={<TenantDashboardPage />} />
-          <Route path="/tenant/bills" element={<TenantBillsPage />} />
-          <Route path="/tenant/requests" element={<TenantRequestsPage />} />
-          <Route path="/tenant/announcements" element={<TenantAnnouncementPage />} />
-          <Route path="/tenant/documents" element={<TenantDocumentsPage />} />
-          <Route path="/tenant/feedback" element={<TenantFeedbackPage />} />
-          
+            {/* Tenant Routes */}
+            <Route path="/tenant" element={<TenantDashboardPage />} />
+            <Route path="/tenant/bills" element={<TenantBillsPage />} />
+            <Route path="/tenant/requests" element={<TenantRequestsPage />} />
+            <Route path="/tenant/announcements" element={<TenantAnnouncementPage />} />
+            <Route path="/tenant/documents" element={<TenantDocumentsPage />} />
+            <Route path="/tenant/feedback" element={<TenantFeedbackPage />} />
+          </Route>
         </Routes>
       </div>
     </Router>

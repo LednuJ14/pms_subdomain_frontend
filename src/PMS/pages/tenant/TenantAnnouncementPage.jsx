@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Loader2, Megaphone, Calendar, Clock, AlertCircle, CheckCircle, FileText, Pin, Eye, ChevronDown, ChevronUp, Wrench, CreditCard } from 'lucide-react';
 import { apiService } from '../../../services/api';
-import Header from '../../components/Header';
-
 const TenantAnnouncementPage = () => {
   const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState([]);
@@ -103,7 +101,7 @@ const TenantAnnouncementPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>Loading announcements...</span>
@@ -114,7 +112,7 @@ const TenantAnnouncementPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -129,10 +127,8 @@ const TenantAnnouncementPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
+    <div className="w-full">
       {/* Header */}
-      <Header userType="tenant" />
-
       {/* Main Content */}
       <div className="px-4 py-8 w-full">
         <div className="max-w-6xl mx-auto space-y-6">

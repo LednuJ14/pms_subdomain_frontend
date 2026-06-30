@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Header from '../../components/Header.jsx';
 import { apiService } from '../../../services/api';
 import { Bell, ClipboardList, MessageSquare, Calendar, FileText, CheckCircle, AlertCircle, ChevronRight, CalendarDays, Users, Wrench, ArrowRight, Loader2 } from 'lucide-react';
 
@@ -50,7 +49,7 @@ const StaffDashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full flex items-center justify-center">
+      <div className="w-full flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin" />
       </div>
     );
@@ -66,169 +65,172 @@ const StaffDashboardPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      <Header userType="staff" />
-      <div className="px-4 py-8 w-full">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="w-full animate-in fade-in duration-500">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="animate-in slide-in-from-left-4 duration-500">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {apiService.getStoredUser()?.first_name || 'Staff'}!</h1>
+            <p className="text-gray-600">Here is your overview for today.</p>
+          </div>
+        </div>
+
+        {/* Key Metrics */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4 duration-500 delay-100">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Dashboard</h1>
-                <p className="text-gray-600">Welcome back! Here is your overview.</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">My Tasks</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.myTasks}</p>
+                <p className="text-xs text-gray-500 mt-1">assigned to me</p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <ClipboardList className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
 
-        <main className="px-4 py-8 w-full">
-          <div className="max-w-7xl mx-auto space-y-8">
-          {/* Key Metrics */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">My Tasks</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.myTasks}</p>
-                  <p className="text-xs text-gray-500 mt-1">assigned to me</p>
-                </div>
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <ClipboardList className="w-6 h-6 text-blue-600" />
-                </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Pending Requests</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.pendingRequests}</p>
+                <p className="text-xs text-gray-500 mt-1">awaiting action</p>
+              </div>
+              <div className="p-3 bg-amber-50 rounded-lg">
+                <Wrench className="w-6 h-6 text-amber-600" />
               </div>
             </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Pending Requests</p>
-                  <p className="text-2xl font-bold text-amber-600">{stats.pendingRequests}</p>
-                  <p className="text-xs text-gray-500 mt-1">awaiting action</p>
-                </div>
-                <div className="p-3 bg-amber-50 rounded-lg">
-                  <Wrench className="w-6 h-6 text-amber-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Unread Messages</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.unreadMessages}</p>
-                  <p className="text-xs text-gray-500 mt-1">inbox total</p>
-                </div>
-                <div className="p-3 bg-purple-50 rounded-lg">
-                  <MessageSquare className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Upcoming Shifts</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.upcomingShifts}</p>
-                  <p className="text-xs text-gray-500 mt-1">this week</p>
-                </div>
-                <div className="p-3 bg-rose-50 rounded-lg">
-                  <Calendar className="w-6 h-6 text-rose-600" />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Quick Actions */}
-          <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {quickLinks.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`group flex items-center space-x-3 p-4 bg-gradient-to-r ${item.gradient} hover:from-white hover:to-white rounded-lg transition-all duration-200 border ${item.border}`}
-                >
-                  <div className={`p-2 ${item.iconBg} rounded-lg group-hover:brightness-110 transition-colors`}>
-                    <item.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{item.label}</p>
-                    <p className="text-sm text-gray-600">Go to {item.label.toLowerCase()}</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 ml-auto" />
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* Main Content Grid */}
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">Workload Overview</h2>
-                <ClipboardList className="w-5 h-5 text-gray-400" />
-              </div>
-              <div className="space-y-5">
-                <div>
-                  <div className="flex items-center justify-between mb-2 text-sm">
-                    <span className="text-gray-600">Pending</span>
-                    <span className="text-gray-900 font-medium">{workload.pending}</span>
-                  </div>
-                  <div className="w-full h-3 rounded-full bg-amber-100 overflow-hidden">
-                    <div
-                      className="h-3 bg-amber-500"
-                      style={{ width: `${workloadTotal ? (workload.pending / workloadTotal) * 100 : 0}%` }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2 text-sm">
-                    <span className="text-gray-600">In Progress</span>
-                    <span className="text-gray-900 font-medium">{workload.inProgress}</span>
-                  </div>
-                  <div className="w-full h-3 rounded-full bg-blue-100 overflow-hidden">
-                    <div
-                      className="h-3 bg-blue-500"
-                      style={{ width: `${workloadTotal ? (workload.inProgress / workloadTotal) * 100 : 0}%` }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2 text-sm">
-                    <span className="text-gray-600">Completed</span>
-                    <span className="text-gray-900 font-medium">{workload.completed}</span>
-                  </div>
-                  <div className="w-full h-3 rounded-full bg-emerald-100 overflow-hidden">
-                    <div
-                      className="h-3 bg-emerald-500"
-                      style={{ width: `${workloadTotal ? (workload.completed / workloadTotal) * 100 : 0}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  <div className="p-4 rounded-lg bg-gray-50 border">
-                    <p className="text-xs text-gray-500">This Week</p>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">{stats.upcomingShifts} upcoming shifts</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-gray-50 border">
-                    <p className="text-xs text-gray-500">Inbox</p>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">{stats.unreadMessages} unread messages</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">Announcements</h2>
-                <Bell className="w-5 h-5 text-gray-400" />
-              </div>
-              <ul className="space-y-3 text-sm text-gray-700">
-                <li className="flex items-start gap-2"><Bell className="w-4 h-4 mt-0.5 text-purple-500" /> Fire drill scheduled for Friday 10 AM.</li>
-                <li className="flex items-start gap-2"><Bell className="w-4 h-4 mt-0.5 text-purple-500" /> New safety protocols updated in documents.</li>
-                <li className="flex items-start gap-2"><Bell className="w-4 h-4 mt-0.5 text-purple-500" /> Monthly meeting next week.</li>
-              </ul>
-            </div>
-          </section>
           </div>
-        </main>
+
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Unread Messages</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.unreadMessages}</p>
+                <p className="text-xs text-gray-500 mt-1">inbox total</p>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <MessageSquare className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Upcoming Shifts</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.upcomingShifts}</p>
+                <p className="text-xs text-gray-500 mt-1">this week</p>
+              </div>
+              <div className="p-3 bg-rose-50 rounded-lg">
+                <Calendar className="w-6 h-6 text-rose-600" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Quick Actions */}
+        <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-in slide-in-from-bottom-4 duration-500 delay-200 hover:shadow-md transition-shadow">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {quickLinks.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                className={`group flex items-center space-x-3 p-4 bg-gradient-to-r ${item.gradient} hover:from-white hover:to-white rounded-lg transition-all duration-200 border ${item.border}`}
+              >
+                <div className={`p-2 ${item.iconBg} rounded-lg group-hover:scale-110 transition-transform`}>
+                  <item.icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{item.label}</p>
+                  <p className="text-sm text-gray-600">Go to {item.label.toLowerCase()}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 ml-auto group-hover:translate-x-1 transition-transform" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Main Content Grid */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-bottom-4 duration-500 delay-300">
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Workload Overview</h2>
+              <ClipboardList className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="space-y-5">
+              <div>
+                <div className="flex items-center justify-between mb-2 text-sm">
+                  <span className="text-gray-600">Pending</span>
+                  <span className="text-gray-900 font-medium">{workload.pending}</span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-amber-100 overflow-hidden">
+                  <div
+                    className="h-3 bg-amber-500 transition-all duration-1000 ease-out"
+                    style={{ width: `${workloadTotal ? (workload.pending / workloadTotal) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2 text-sm">
+                  <span className="text-gray-600">In Progress</span>
+                  <span className="text-gray-900 font-medium">{workload.inProgress}</span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-blue-100 overflow-hidden">
+                  <div
+                    className="h-3 bg-blue-500 transition-all duration-1000 ease-out"
+                    style={{ width: `${workloadTotal ? (workload.inProgress / workloadTotal) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2 text-sm">
+                  <span className="text-gray-600">Completed</span>
+                  <span className="text-gray-900 font-medium">{workload.completed}</span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-emerald-100 overflow-hidden">
+                  <div
+                    className="h-3 bg-emerald-500 transition-all duration-1000 ease-out"
+                    style={{ width: `${workloadTotal ? (workload.completed / workloadTotal) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
+                  <p className="text-xs text-gray-500">This Week</p>
+                  <p className="text-lg font-semibold text-gray-900 mt-1">{stats.upcomingShifts} upcoming shifts</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
+                  <p className="text-xs text-gray-500">Inbox</p>
+                  <p className="text-lg font-semibold text-gray-900 mt-1">{stats.unreadMessages} unread messages</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Announcements</h2>
+              <Bell className="w-5 h-5 text-gray-400" />
+            </div>
+            <ul className="space-y-3 text-sm text-gray-700">
+              <li className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                <Bell className="w-4 h-4 mt-0.5 text-purple-500 flex-shrink-0" />
+                <span>Fire drill scheduled for Friday 10 AM.</span>
+              </li>
+              <li className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                <Bell className="w-4 h-4 mt-0.5 text-purple-500 flex-shrink-0" />
+                <span>New safety protocols updated in documents.</span>
+              </li>
+              <li className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                <Bell className="w-4 h-4 mt-0.5 text-purple-500 flex-shrink-0" />
+                <span>Monthly meeting next week.</span>
+              </li>
+            </ul>
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, FileText, Upload, Download, Search, Folder, X, Eye, Trash2 } from 'lucide-react';
-import Header from '../../components/Header';
 import { apiService } from '../../../services/api';
 
 // Use centralized mock docs
@@ -172,7 +171,7 @@ const TenantDocumentsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>Loading documents...</span>
@@ -183,7 +182,7 @@ const TenantDocumentsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
+      <div className="w-full">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Retry</button>
@@ -193,8 +192,7 @@ const TenantDocumentsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      <Header userType="tenant" />
+    <div className="w-full">
       <div className="px-4 py-8 w-full">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

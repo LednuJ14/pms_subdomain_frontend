@@ -175,7 +175,7 @@ const StaffAnnouncementsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>Loading announcements...</span>
@@ -186,7 +186,7 @@ const StaffAnnouncementsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -201,9 +201,7 @@ const StaffAnnouncementsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      <Header userType="staff" />
-
+    <div className="w-full">
       <main className="px-4 py-8 w-full">
         <div className="max-w-5xl mx-auto space-y-6">
           <div className="flex items-center justify-between">

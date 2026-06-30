@@ -4,8 +4,6 @@ import { Search, Download, Edit, Eye, Reply, Archive, Loader2, X, Star, MessageS
 import { apiService } from '../../../services/api';
 import AccountSettings from '../../components/AccountSettings';
 import ErrorBoundary from '../../components/ErrorBoundary';
-import Header from '../../components/Header';
-
 const FeedbackPage = () => {
   const navigate = useNavigate();
   const [feedback, setFeedback] = useState([]);
@@ -201,7 +199,7 @@ const FeedbackPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span>Loading feedback...</span>
@@ -212,7 +210,7 @@ const FeedbackPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -227,15 +225,11 @@ const FeedbackPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      {/* Header */}
-      <Header userType="manager" />
-
-      {/* Main Content */}
-      <div className="px-4 py-8 w-full">
+    <div className="w-full animate-in fade-in duration-500">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-left-4 duration-500">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Feedback & Complaints</h1>
               <p className="text-gray-600">Manage tenant feedback, complaints, and suggestions effectively</p>

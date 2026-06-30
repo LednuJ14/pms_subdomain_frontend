@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Building, Phone, Mail, Search, Filter, Plus, Edit, Trash2, Eye, CheckCircle, Clock, AlertTriangle, ArrowRight, Users, Home, CreditCard, MessageSquare, Wrench, X, RefreshCw } from 'lucide-react';
+import { User, Building, Phone, Mail, Search, Filter, Plus, Edit, Trash2, Eye, CheckCircle, Clock, AlertTriangle, ArrowRight, Users, Home, CreditCard, MessageSquare, Wrench, X, RefreshCw, Megaphone } from 'lucide-react';
 import { apiService } from '../../../services/api';
-import Header from '../../components/Header';
-
 const TenantsPage = () => {
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -378,26 +376,22 @@ const TenantsPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 w-full">
-      {/* Header */}
-      <Header userType="manager" />
-
-      {/* Main Content */}
-      <div className="px-4 py-8">
+    <div className="w-full animate-in fade-in duration-500">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-left-4 duration-500">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Tenants Management</h1>
-              <p className="text-gray-600">Manage and monitor all tenants in your properties</p>
+              <p className="text-gray-600">Manage tenant profiles, leases, and communications</p>
             </div>
             <div className="flex items-center space-x-3">
-              <button 
+              <button
                 onClick={handleAddTenant}
                 className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 flex items-center space-x-2 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Plus className="w-5 h-5" />
-                <span>Add New Tenant</span>
+                <span>Add Tenant</span>
               </button>
             </div>
           </div>
