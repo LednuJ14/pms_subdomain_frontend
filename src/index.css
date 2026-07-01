@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* JACS Design System - Modern geometric luxury */
+/* PMS Design System - Modern geometric luxury */
 
 @layer base {
   :root {
@@ -15,18 +15,18 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 9%;
 
-    /* JACS Brand Colors */
+    /* PMS Brand Colors */
     --primary: 0 0% 9%;
     --primary-foreground: 0 0% 98%;
     
-    --jacs-dark: 0 0% 7%;
-    --jacs-dark-foreground: 0 0% 98%;
+    --pms-dark: 0 0% 7%;
+    --pms-dark-foreground: 0 0% 98%;
     
-    --jacs-accent: 25 95% 53%;
-    --jacs-accent-foreground: 0 0% 98%;
+    --pms-accent: 25 95% 53%;
+    --pms-accent-foreground: 0 0% 98%;
     
-    --jacs-light: 0 0% 98%;
-    --jacs-light-foreground: 0 0% 9%;
+    --pms-light: 0 0% 98%;
+    --pms-light-foreground: 0 0% 9%;
 
     --secondary: 0 0% 96%;
     --secondary-foreground: 0 0% 9%;
