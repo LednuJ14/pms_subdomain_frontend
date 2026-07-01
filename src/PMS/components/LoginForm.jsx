@@ -136,13 +136,19 @@ const LoginForm = ({ onForgotPassword }) => {
             navigate('/staff');
           } else if (user?.role === 'property_manager') {
             navigate('/dashboard');
-          } else if (user?.role === 'ADMIN') {
+          } else if (user?.role === 'ADMIN' || user?.role === 'admin') {
             const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-            if (hostname.startsWith('admin.')) {
-              navigate('/admin-dashboard');
-            } else {
-              navigate('/dashboard');
+            if (!hostname.startsWith('admin.')) {
+              // Redirect to admin subdomain
+              const parts = hostname.split('.');
+              if (parts.length > 0) {
+                parts[0] = 'admin';
+                const newHostname = parts.join('.');
+                window.location.href = `${window.location.protocol}//${newHostname}${window.location.port ? ':' + window.location.port : ''}/admin-dashboard`;
+                return;
+              }
             }
+            navigate('/admin-dashboard');
           } else {
             navigate('/dashboard'); // Default fallback
           }
@@ -193,13 +199,21 @@ const LoginForm = ({ onForgotPassword }) => {
               navigate('/tenant');
             } else if (user?.role === 'staff') {
               navigate('/staff');
-            } else if (user?.role === 'property_manager' || user?.role === 'ADMIN' || user?.role === 'admin') {
+            } else if (user?.role === 'property_manager') {
+              navigate('/dashboard');
+            } else if (user?.role === 'ADMIN' || user?.role === 'admin') {
               const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-              if (hostname.startsWith('admin.')) {
-                navigate('/admin-dashboard');
-              } else {
-                navigate('/dashboard');
+              if (!hostname.startsWith('admin.')) {
+                // Redirect to admin subdomain
+                const parts = hostname.split('.');
+                if (parts.length > 0) {
+                  parts[0] = 'admin';
+                  const newHostname = parts.join('.');
+                  window.location.href = `${window.location.protocol}//${newHostname}${window.location.port ? ':' + window.location.port : ''}/admin-dashboard`;
+                  return;
+                }
               }
+              navigate('/admin-dashboard');
             } else {
               navigate('/dashboard'); // Default fallback
             }

@@ -5,11 +5,30 @@ class ApiService {
     const envApiURL = import.meta.env.VITE_API_BASE_URL;
 
     // Use env var if set, otherwise default to localhost:5001 for local dev
-    this.propertyBaseURL = envPropertyURL || envApiURL || 'http://127.0.0.1:5001/api';
-
-    this.mainDomainBaseURL =
-      import.meta.env.VITE_MAIN_DOMAIN_API_URL ||
-      'http://localhost:5000/api';
+    let propBase = envPropertyURL || envApiURL || 'http://127.0.0.1:5001/api';
+    let mainBase = import.meta.env.VITE_MAIN_DOMAIN_API_URL || 'http://localhost:5000/api';
+    
+    // CRITICAL FIX: If the code was built with localhost env vars but is running on a live domain,
+    // automatically rewrite the base URLs to use the live domain instead of failing.
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const isLocalhost = hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '127.0.0.1' || hostname.match(/^192\.168\./) || hostname.match(/^10\./);
+      
+      if (!isLocalhost) {
+        const protocol = window.location.protocol;
+        // If it's a live domain but the baked url says localhost, override it!
+        if (propBase.includes('localhost') || propBase.includes('127.0.0.1')) {
+          // Assume the API is hosted on the same domain or a subdomain
+          propBase = `${protocol}//${hostname}/api`;
+        }
+        if (mainBase.includes('localhost') || mainBase.includes('127.0.0.1')) {
+          mainBase = `${protocol}//${hostname}/api`;
+        }
+      }
+    }
+    
+    this.propertyBaseURL = propBase;
+    this.mainDomainBaseURL = mainBase;
 
     // Use stored base URL if available, otherwise default to property base URL
     const storedBase = localStorage.getItem('active_api_base');

@@ -43,9 +43,11 @@ const RouteProtection = ({ children, allowedUserTypes = ['property_manager', 'ma
         return;
       }
 
-      // Block admin from normal properties routes if they haven't impersonated a property yet
+      // Block Super Admin from normal properties routes if they haven't impersonated a property yet
+      // Only applies to ADMIN role - property managers and staff auto-detect their property on login
       const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-      if (hostname.startsWith('admin.') && (currentUser?.user_type === 'property_manager' || currentUser?.user_type === 'admin' || currentUser?.role === 'ADMIN')) {
+      const isAdminUser = currentUser?.user_type === 'admin' || currentUser?.user_type === 'ADMIN' || currentUser?.role === 'admin' || currentUser?.role === 'ADMIN';
+      if (hostname.startsWith('admin.') && isAdminUser) {
         const impersonated = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('impersonated_subdomain') : null;
         if (!impersonated) {
           console.log('RouteProtection: Admin user has no impersonated property, redirecting to admin-dashboard');
