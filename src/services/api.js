@@ -1,32 +1,19 @@
 // Real API service that connects to Flask backend
 class ApiService {
   constructor() {
-    // Property base URL should always be port 5001 for subdomain
-    // Only use VITE_PROPERTY_API_BASE_URL if explicitly set, otherwise default to 5001
     const envPropertyURL = import.meta.env.VITE_PROPERTY_API_BASE_URL;
     const envApiURL = import.meta.env.VITE_API_BASE_URL;
-    
-    // For propertyBaseURL, only use env vars if they point to port 5001
-    if (envPropertyURL && envPropertyURL.includes('5001')) {
-      this.propertyBaseURL = envPropertyURL;
-    } else if (envApiURL && envApiURL.includes('5001')) {
-      this.propertyBaseURL = envApiURL;
-    } else {
-      // Always default to port 5001 for subdomain backend
-      this.propertyBaseURL = 'http://localhost:5001/api';
-    }
-    
-      this.mainDomainBaseURL =
+
+    // Use env var if set, otherwise default to localhost:5001 for local dev
+    this.propertyBaseURL = envPropertyURL || envApiURL || 'http://localhost:5001/api';
+
+    this.mainDomainBaseURL =
       import.meta.env.VITE_MAIN_DOMAIN_API_URL ||
       'http://localhost:5000/api';
-    // For subdomain, always default to property base URL
-    // Only use stored base if it's also a property URL (port 5001)
+
+    // Use stored base URL if available, otherwise default to property base URL
     const storedBase = localStorage.getItem('active_api_base');
-    if (storedBase && storedBase.includes('5001')) {
-      this.activeBaseURL = storedBase;
-    } else {
-      this.activeBaseURL = this.propertyBaseURL;
-    }
+    this.activeBaseURL = storedBase || this.propertyBaseURL;
 
     this.token = localStorage.getItem('access_token');
     this.propertyContext = { property: null }; // Will be loaded from backend
@@ -39,26 +26,6 @@ class ApiService {
     console.log('Has token:', !!this.token);
     console.log('Stored active_api_base:', localStorage.getItem('active_api_base'));
     
-    // Force propertyBaseURL for subdomain - ensure it's always port 5001
-    // If propertyBaseURL itself is wrong, fix it first
-    if (!this.propertyBaseURL || !this.propertyBaseURL.includes('5001')) {
-      console.warn('propertyBaseURL is incorrect, forcing to port 5001');
-      this.propertyBaseURL = 'http://localhost:5001/api';
-    }
-    
-    // Force activeBaseURL to propertyBaseURL if it's wrong
-    if (this.activeBaseURL && (this.activeBaseURL.includes('5000') || !this.activeBaseURL.includes('5001'))) {
-      console.warn('Active base URL is set to wrong port, resetting to property base URL (5001)');
-      console.warn('Previous activeBaseURL:', this.activeBaseURL);
-      this.activeBaseURL = this.propertyBaseURL;
-      console.log('Reset activeBaseURL to:', this.activeBaseURL);
-    }
-    
-    // Also clear localStorage if it has wrong URL (reuse storedBase from above)
-    if (storedBase && (storedBase.includes('5000') || !storedBase.includes('5001'))) {
-      console.warn('Clearing incorrect stored base URL from localStorage');
-      localStorage.setItem('active_api_base', this.propertyBaseURL);
-    }
   }
 
   // Add method to check authentication status
@@ -157,10 +124,9 @@ class ApiService {
       targetBaseURL = overrideBaseURL;
     } else if (this.propertyBaseURL) {
       targetBaseURL = this.propertyBaseURL;
-    } else if (this.activeBaseURL && this.activeBaseURL.includes('5001')) {
+    } else if (this.activeBaseURL) {
       targetBaseURL = this.activeBaseURL;
     } else {
-      // Fallback: use propertyBaseURL even if not set (shouldn't happen)
       targetBaseURL = 'http://localhost:5001/api';
     }
     
@@ -1821,16 +1787,8 @@ class ApiService {
   }
 
   setActiveBaseURL(baseURL) {
-    // For subdomain, always use propertyBaseURL (port 5001)
-    // Don't allow setting to main domain (port 5000) for subdomain frontend
-    if (baseURL && baseURL.includes('5001')) {
-      this.activeBaseURL = baseURL;
-    } else {
-      // Force to propertyBaseURL (port 5001) for subdomain
-      this.activeBaseURL = this.propertyBaseURL || 'http://localhost:5001/api';
-    }
+    this.activeBaseURL = baseURL || this.propertyBaseURL;
     localStorage.setItem('active_api_base', this.activeBaseURL);
-    console.log('Active base URL set to:', this.activeBaseURL);
   }
 
   clearActiveBaseURL() {
