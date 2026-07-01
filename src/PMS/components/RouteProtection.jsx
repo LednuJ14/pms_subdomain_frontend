@@ -43,6 +43,17 @@ const RouteProtection = ({ children, allowedUserTypes = ['property_manager', 'ma
         return;
       }
 
+      // Block admin from normal properties routes if they haven't impersonated a property yet
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+      if (hostname.startsWith('admin.') && (currentUser?.user_type === 'property_manager' || currentUser?.user_type === 'admin' || currentUser?.role === 'ADMIN')) {
+        const impersonated = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('impersonated_subdomain') : null;
+        if (!impersonated) {
+          console.log('RouteProtection: Admin user has no impersonated property, redirecting to admin-dashboard');
+          navigate('/admin-dashboard');
+          return;
+        }
+      }
+
       // If we get here, user is authenticated and has the right user type
       console.log('RouteProtection: Authentication check passed, setting loading to false');
       setDebugInfo('Authentication check passed, setting loading to false');
