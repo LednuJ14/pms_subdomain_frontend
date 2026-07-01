@@ -226,8 +226,26 @@ class ApiService {
       
       // Extract subdomain from hostname (e.g., "pat" from "pat.localhost")
       const subdomainMatch = hostname.match(/^([a-zA-Z0-9-]+)\.localhost/);
+      let subdomain = null;
+      
       if (subdomainMatch) {
-        const subdomain = subdomainMatch[1].toLowerCase();
+        subdomain = subdomainMatch[1].toLowerCase();
+      } else {
+        const parts = hostname.split('.');
+        if (parts.length > 0 && parts[0].toLowerCase() !== 'localhost' && !parts[0].match(/^\d+\.\d+\.\d+\.\d+$/)) {
+          subdomain = parts[0].toLowerCase();
+        }
+      }
+      
+      if (subdomain) {
+        // Check for Super Admin Impersonation
+        if (subdomain === 'admin' && typeof sessionStorage !== 'undefined') {
+          const impersonated = sessionStorage.getItem('impersonated_subdomain');
+          if (impersonated) {
+            subdomain = impersonated;
+          }
+        }
+        
         // Try to get property_id from sessionStorage if available
         const cached = sessionStorage.getItem('property_context');
         if (cached) {
@@ -411,9 +429,17 @@ class ApiService {
         } else {
           const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
           const hostnameSubdomain = hostname.split('.')[0];
-          // Only use hostname subdomain if it's not an IP address
+          
           if (hostnameSubdomain && hostnameSubdomain.toLowerCase() !== 'localhost' && !hostnameSubdomain.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-            subdomainToUse = hostnameSubdomain;
+            subdomainToUse = hostnameSubdomain.toLowerCase();
+            
+            // Check for Super Admin Impersonation
+            if (subdomainToUse === 'admin' && typeof sessionStorage !== 'undefined') {
+              const impersonated = sessionStorage.getItem('impersonated_subdomain');
+              if (impersonated) {
+                subdomainToUse = impersonated;
+              }
+            }
           }
         }
       }
@@ -475,6 +501,14 @@ class ApiService {
           const hostnameSubdomain = hostname.split('.')[0];
           if (hostnameSubdomain && hostnameSubdomain.toLowerCase() !== 'localhost' && !hostnameSubdomain.match(/^\d+\.\d+\.\d+\.\d+$/)) {
             subdomain = hostnameSubdomain.toLowerCase();
+            
+            // Check for Super Admin Impersonation
+            if (subdomain === 'admin' && typeof sessionStorage !== 'undefined') {
+              const impersonated = sessionStorage.getItem('impersonated_subdomain');
+              if (impersonated) {
+                subdomain = impersonated;
+              }
+            }
           }
         }
         

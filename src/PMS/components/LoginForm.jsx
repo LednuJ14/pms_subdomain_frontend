@@ -130,6 +130,13 @@ const LoginForm = ({ onForgotPassword }) => {
             navigate('/staff');
           } else if (user?.role === 'property_manager') {
             navigate('/dashboard');
+          } else if (user?.role === 'ADMIN') {
+            const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+            if (hostname.startsWith('admin.')) {
+              navigate('/admin-dashboard');
+            } else {
+              navigate('/dashboard');
+            }
           } else {
             navigate('/dashboard'); // Default fallback
           }
