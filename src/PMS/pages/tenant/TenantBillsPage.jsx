@@ -256,11 +256,11 @@ const TenantBillsPage = () => {
   };
 
   return (
-    <div className="w-full">
-      <div className="px-4 py-8 w-full">
+    <div className="w-full animate-in fade-in duration-500">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-left-4 duration-500">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">My Bills</h1>
               <p className="text-gray-600">Manage your payments and billing information</p>

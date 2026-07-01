@@ -127,13 +127,13 @@ const TenantAnnouncementPage = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full animate-in fade-in duration-500">
       {/* Header */}
       {/* Main Content */}
-      <div className="px-4 py-8 w-full">
-        <div className="max-w-6xl mx-auto space-y-6">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div className="max-w-7xl mx-auto space-y-8">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-left-4 duration-500">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Community Announcements</h1>
               <p className="text-gray-600">Stay updated with the latest news and important information</p>
@@ -346,7 +346,7 @@ const TenantAnnouncementPage = () => {
 
           {/* Empty State */}
           {paginatedAnnouncements.length === 0 && (
-            <div className="text-center py-12">
+            <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100 animate-in slide-in-from-bottom-4 duration-500">
               <Megaphone className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No announcements found</h3>
               <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
