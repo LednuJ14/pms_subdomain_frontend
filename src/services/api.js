@@ -5,7 +5,7 @@ class ApiService {
     const envApiURL = import.meta.env.VITE_API_BASE_URL;
 
     // Use env var if set, otherwise default to localhost:5001 for local dev
-    this.propertyBaseURL = envPropertyURL || envApiURL || 'http://localhost:5001/api';
+    this.propertyBaseURL = envPropertyURL || envApiURL || 'http://127.0.0.1:5001/api';
 
     this.mainDomainBaseURL =
       import.meta.env.VITE_MAIN_DOMAIN_API_URL ||
@@ -127,7 +127,7 @@ class ApiService {
     } else if (this.activeBaseURL) {
       targetBaseURL = this.activeBaseURL;
     } else {
-      targetBaseURL = 'http://localhost:5001/api';
+      targetBaseURL = 'http://127.0.0.1:5001/api';
     }
     
     const methodLabel = (config.method || 'GET').toUpperCase();

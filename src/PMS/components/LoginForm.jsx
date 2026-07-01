@@ -181,8 +181,13 @@ const LoginForm = ({ onForgotPassword }) => {
               navigate('/tenant');
             } else if (user?.role === 'staff') {
               navigate('/staff');
-            } else if (user?.role === 'property_manager') {
-              navigate('/dashboard');
+            } else if (user?.role === 'property_manager' || user?.role === 'ADMIN' || user?.role === 'admin') {
+              const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+              if (hostname.startsWith('admin.')) {
+                navigate('/admin-dashboard');
+              } else {
+                navigate('/dashboard');
+              }
             } else {
               navigate('/dashboard'); // Default fallback
             }
