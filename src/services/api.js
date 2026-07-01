@@ -1,32 +1,19 @@
 // Real API service that connects to Flask backend
 class ApiService {
   constructor() {
-    // Property base URL should always be port 5001 for subdomain
-    // Only use VITE_PROPERTY_API_BASE_URL if explicitly set, otherwise default to 5001
     const envPropertyURL = import.meta.env.VITE_PROPERTY_API_BASE_URL;
     const envApiURL = import.meta.env.VITE_API_BASE_URL;
-    
-    // For propertyBaseURL, only use env vars if they point to port 5001
-    if (envPropertyURL && envPropertyURL.includes('5001')) {
-      this.propertyBaseURL = envPropertyURL;
-    } else if (envApiURL && envApiURL.includes('5001')) {
-      this.propertyBaseURL = envApiURL;
-    } else {
-      // Always default to port 5001 for subdomain backend
-      this.propertyBaseURL = 'http://localhost:5001/api';
-    }
-    
-      this.mainDomainBaseURL =
+
+    // Use env var if set, otherwise default to localhost:5001 for local dev
+    this.propertyBaseURL = envPropertyURL || envApiURL || 'http://localhost:5001/api';
+
+    this.mainDomainBaseURL =
       import.meta.env.VITE_MAIN_DOMAIN_API_URL ||
       'http://localhost:5000/api';
-    // For subdomain, always default to property base URL
-    // Only use stored base if it's also a property URL (port 5001)
+
+    // Use stored base URL if available, otherwise default to property base URL
     const storedBase = localStorage.getItem('active_api_base');
-    if (storedBase && storedBase.includes('5001')) {
-      this.activeBaseURL = storedBase;
-    } else {
-      this.activeBaseURL = this.propertyBaseURL;
-    }
+    this.activeBaseURL = storedBase || this.propertyBaseURL;
 
     this.token = localStorage.getItem('access_token');
     this.propertyContext = { property: null }; // Will be loaded from backend

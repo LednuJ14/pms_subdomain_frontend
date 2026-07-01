@@ -1,0 +1,178 @@
+name: CI/CD Pipeline Unified
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/pms-subdomain-frontend
+  HEALTH_CHECK_URL: http://localhost:4081
+
+# ----------------------------------
+# 1️⃣ CI + SECURITY (PR & main)
+# ----------------------------------
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+      - name: Bundle size check
+        run: |
+          echo "📦 Bundle size:"
+          du -sh dist
+          SIZE=$(du -sm dist | cut -f1)
+          if [ "$SIZE" -gt 10 ]; then
+            echo "⚠️ Bundle exceeds 10MB"
+          fi
+
+  # ----------------------------------
+  # 2️⃣ DOCKER BUILD + PUSH (main only)
+  # ----------------------------------
+  docker:
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+      BUILD_CONFIG: production
+    outputs:
+      build-time: ${{ steps.timer.outputs.time }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start timer
+        id: timer
+        run: echo "start=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=sha
+            type=raw,value=main
+            type=raw,value=latest
+
+      - name: Build & push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/pms-subdomain-frontend:main
+            ${{ secrets.DOCKERHUB_USERNAME }}/pms-subdomain-frontend:${{ env.IMAGE_TAG }}
+          build-args: |
+            BUILD_CONFIG=${{ env.BUILD_CONFIG }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pms-subdomain-frontend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pms-subdomain-frontend:buildcache,mode=max
+          platforms: linux/amd64
+
+      - name: End timer
+        run: |
+          end=$(date +%s)
+          echo "time=$((end - ${{ steps.timer.outputs.start }}))s" >> $GITHUB_OUTPUT
+
+  # ----------------------------------
+  # 5️⃣ DEPLOY
+  # ----------------------------------
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+
+            echo "Navigating to deployment directory..."
+            cd deployment-scripts/pms-subdomain/pms-subdomain-frontend/
+
+            docker compose pull pms-subdomain-frontend
+            docker compose up -d pms-subdomain-frontend
+
+            docker image prune -af
+
+  # ----------------------------------
+  # 7️⃣ POST-DEPLOY
+  # ----------------------------------
+  post:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          echo "# Deployment Changelog" > changelog.md
+          echo "**Deployed:** $(date)" >> changelog.md
+          echo "**Commit:** ${{ github.sha }}" >> changelog.md
+          echo "**Branch:** ${{ github.ref_name }}" >> changelog.md
+          echo "" >> changelog.md
+          echo "## Changes:" >> changelog.md
+          git log --oneline -10 >> changelog.md
+
+      - name: Upload Changelog
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-changelog
+          path: changelog.md
+
+  metrics:
+    needs: post
+    runs-on: ubuntu-latest
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Log Deployment Metrics
+        run: |
+          echo "📊 Deployment Metrics"
+          echo "===================="
+          echo "Deployment Status: ${{ needs.deploy.result }}"
+          echo "Build Time: ${{ needs.docker.outputs.build-time }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+          echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "Workflow: ${{ github.run_id }}"
