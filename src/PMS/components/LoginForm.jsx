@@ -102,6 +102,12 @@ const LoginForm = ({ onForgotPassword }) => {
         setMessage({ type: 'success', text: 'Login successful! Welcome back!' });
         console.log('Login successful:', data);
 
+        // Setup property context for tenant if auto-detected from admin portal
+        if (data.user && data.user.property_subdomain) {
+          sessionStorage.setItem('impersonated_subdomain', data.user.property_subdomain);
+          apiService.setActiveBaseURL(apiService.propertyBaseURL);
+        }
+
         // Clear pending 2FA email
         localStorage.removeItem('pending_2fa_email');
 
@@ -159,6 +165,12 @@ const LoginForm = ({ onForgotPassword }) => {
           
           setMessage({ type: 'success', text: 'Login successful! Welcome back!' });
           console.log('Login successful:', data);
+
+          // Setup property context for tenant if auto-detected from admin portal
+          if (data.user && data.user.property_subdomain) {
+            sessionStorage.setItem('impersonated_subdomain', data.user.property_subdomain);
+            apiService.setActiveBaseURL(apiService.propertyBaseURL);
+          }
 
           // Handle Remember Me functionality
           if (formData.rememberMe) {

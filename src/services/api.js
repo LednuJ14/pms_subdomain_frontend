@@ -19,12 +19,12 @@ class ApiService {
     this.propertyContext = { property: null }; // Will be loaded from backend
     
     // Log initialization info
-    console.log('API Service initialized:');
-    console.log('Property API Base URL:', this.propertyBaseURL);
-    console.log('Main-domain API Base URL:', this.mainDomainBaseURL);
-    console.log('Active API Base URL:', this.activeBaseURL);
-    console.log('Has token:', !!this.token);
-    console.log('Stored active_api_base:', localStorage.getItem('active_api_base'));
+    // console.log('API Service initialized:');
+    // console.log('Property API Base URL:', this.propertyBaseURL);
+    // console.log('Main-domain API Base URL:', this.mainDomainBaseURL);
+    // console.log('Active API Base URL:', this.activeBaseURL);
+    // console.log('Has token:', !!this.token);
+    // console.log('Stored active_api_base:', localStorage.getItem('active_api_base'));
     
   }
 
@@ -131,19 +131,19 @@ class ApiService {
     }
     
     const methodLabel = (config.method || 'GET').toUpperCase();
-    console.log(`Making ${methodLabel} request to: ${targetBaseURL}${url}`);
-    console.log('Base URL selection:', { 
-      overrideBaseURL, 
-      propertyBaseURL: this.propertyBaseURL, 
-      activeBaseURL: this.activeBaseURL,
-      selected: targetBaseURL 
-    });
-    console.log('Request config:', { ...config, headers: { ...config.headers, Authorization: this.token ? 'Bearer [REDACTED]' : undefined } });
+    // console.log(`Making ${methodLabel} request to: ${targetBaseURL}${url}`);
+    // console.log('Base URL selection:', { 
+    //   overrideBaseURL, 
+    //   propertyBaseURL: this.propertyBaseURL, 
+    //   activeBaseURL: this.activeBaseURL,
+    //   selected: targetBaseURL 
+    // });
+    // console.log('Request config:', { ...config, headers: { ...config.headers, Authorization: this.token ? 'Bearer [REDACTED]' : undefined } });
 
     try {
       const response = await fetch(`${targetBaseURL}${url}`, config);
       
-      console.log(`Response status: ${response.status} ${response.statusText}`);
+      // console.log(`Response status: ${response.status} ${response.statusText}`);
       
       let data;
       const contentType = response.headers.get('content-type');
@@ -189,7 +189,7 @@ class ApiService {
         throw error;
       }
       
-      console.log('Request successful:', data);
+      // console.log('Request successful:', data);
       return data;
     } catch (error) {
       console.error('API request failed:', error);
@@ -432,15 +432,15 @@ class ApiService {
           
           if (hostnameSubdomain && hostnameSubdomain.toLowerCase() !== 'localhost' && !hostnameSubdomain.match(/^\d+\.\d+\.\d+\.\d+$/)) {
             subdomainToUse = hostnameSubdomain.toLowerCase();
-            
-            // Check for Super Admin Impersonation
-            if (subdomainToUse === 'admin' && typeof sessionStorage !== 'undefined') {
-              const impersonated = sessionStorage.getItem('impersonated_subdomain');
-              if (impersonated) {
-                subdomainToUse = impersonated;
-              }
-            }
           }
+        }
+      }
+      
+      // Check for Super Admin Impersonation
+      if (subdomainToUse === 'admin' && typeof sessionStorage !== 'undefined') {
+        const impersonated = sessionStorage.getItem('impersonated_subdomain');
+        if (impersonated) {
+          subdomainToUse = impersonated;
         }
       }
       
