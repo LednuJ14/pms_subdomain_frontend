@@ -26,26 +26,6 @@ class ApiService {
     console.log('Has token:', !!this.token);
     console.log('Stored active_api_base:', localStorage.getItem('active_api_base'));
     
-    // Force propertyBaseURL for subdomain - ensure it's always port 5001
-    // If propertyBaseURL itself is wrong, fix it first
-    if (!this.propertyBaseURL || !this.propertyBaseURL.includes('5001')) {
-      console.warn('propertyBaseURL is incorrect, forcing to port 5001');
-      this.propertyBaseURL = 'http://localhost:5001/api';
-    }
-    
-    // Force activeBaseURL to propertyBaseURL if it's wrong
-    if (this.activeBaseURL && (this.activeBaseURL.includes('5000') || !this.activeBaseURL.includes('5001'))) {
-      console.warn('Active base URL is set to wrong port, resetting to property base URL (5001)');
-      console.warn('Previous activeBaseURL:', this.activeBaseURL);
-      this.activeBaseURL = this.propertyBaseURL;
-      console.log('Reset activeBaseURL to:', this.activeBaseURL);
-    }
-    
-    // Also clear localStorage if it has wrong URL (reuse storedBase from above)
-    if (storedBase && (storedBase.includes('5000') || !storedBase.includes('5001'))) {
-      console.warn('Clearing incorrect stored base URL from localStorage');
-      localStorage.setItem('active_api_base', this.propertyBaseURL);
-    }
   }
 
   // Add method to check authentication status
@@ -144,10 +124,9 @@ class ApiService {
       targetBaseURL = overrideBaseURL;
     } else if (this.propertyBaseURL) {
       targetBaseURL = this.propertyBaseURL;
-    } else if (this.activeBaseURL && this.activeBaseURL.includes('5001')) {
+    } else if (this.activeBaseURL) {
       targetBaseURL = this.activeBaseURL;
     } else {
-      // Fallback: use propertyBaseURL even if not set (shouldn't happen)
       targetBaseURL = 'http://localhost:5001/api';
     }
     
@@ -1808,16 +1787,8 @@ class ApiService {
   }
 
   setActiveBaseURL(baseURL) {
-    // For subdomain, always use propertyBaseURL (port 5001)
-    // Don't allow setting to main domain (port 5000) for subdomain frontend
-    if (baseURL && baseURL.includes('5001')) {
-      this.activeBaseURL = baseURL;
-    } else {
-      // Force to propertyBaseURL (port 5001) for subdomain
-      this.activeBaseURL = this.propertyBaseURL || 'http://localhost:5001/api';
-    }
+    this.activeBaseURL = baseURL || this.propertyBaseURL;
     localStorage.setItem('active_api_base', this.activeBaseURL);
-    console.log('Active base URL set to:', this.activeBaseURL);
   }
 
   clearActiveBaseURL() {
