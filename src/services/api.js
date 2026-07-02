@@ -328,7 +328,7 @@ class ApiService {
       });
     };
 
-    const persistSession = (response, baseURL) => {
+    const persistSession = async (response, baseURL) => {
       // For subdomain frontend, always use property base URL
       // This ensures all subdomain-specific endpoints use the correct backend
       this.setActiveBaseURL(this.propertyBaseURL);
@@ -340,6 +340,54 @@ class ApiService {
 
       const normalizedUser = this.normalizeUserPayload(response.user);
       localStorage.setItem('user', JSON.stringify(normalizedUser));
+
+      // CRITICAL: Eagerly resolve and cache property context BEFORE dashboard renders
+      // This eliminates the race condition where dashboard API calls fire before
+      // PropertyContext.jsx has loaded, causing "Property not found" 404 errors
+      try {
+        const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+        let subdomain = null;
+        
+        // Extract subdomain from URL
+        const subdomainMatch = hostname.match(/^([a-zA-Z0-9-]+)\.localhost/);
+        if (subdomainMatch) {
+          subdomain = subdomainMatch[1].toLowerCase();
+        } else {
+          const parts = hostname.split('.');
+          if (parts.length > 1 && parts[0].toLowerCase() !== 'localhost' && !parts[0].match(/^\d+$/)) {
+            subdomain = parts[0].toLowerCase();
+          }
+        }
+        
+        // Handle admin impersonation
+        if (subdomain === 'admin') {
+          const impersonated = typeof sessionStorage !== 'undefined' 
+            ? sessionStorage.getItem('impersonated_subdomain') 
+            : null;
+          if (impersonated) subdomain = impersonated;
+          // Also check if login response provided a property_subdomain
+          if (response.user?.property_subdomain) {
+            subdomain = response.user.property_subdomain;
+          }
+        }
+        
+        // Also check query parameter
+        if (!subdomain || subdomain === 'admin') {
+          const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+          const subdomainParam = urlParams?.get('subdomain');
+          if (subdomainParam) subdomain = subdomainParam.toLowerCase();
+        }
+        
+        if (subdomain && subdomain !== 'admin') {
+          const property = await this.getPropertyBySubdomain(subdomain);
+          if (property && property.id) {
+            sessionStorage.setItem('property_context', JSON.stringify({ property }));
+          }
+        }
+      } catch (cacheError) {
+        // Non-critical - PropertyContext.jsx will still load it
+        console.warn('Could not pre-cache property context:', cacheError);
+      }
 
       return {
         access_token: response.access_token,
