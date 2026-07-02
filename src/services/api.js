@@ -1244,7 +1244,7 @@ class ApiService {
       params.append('page', page);
       params.append('per_page', perPage);
       
-      const response = await this.makeRequest(`/requests?${params.toString()}`, {
+      const response = await this.makeRequest(`/requests/?${params.toString()}`, {
         baseURL: this.propertyBaseURL
       });
       
@@ -1275,20 +1275,26 @@ class ApiService {
   
   async createMaintenanceRequest(requestData) {
     try {
-      // Map frontend fields to backend fields
-      const backendData = {
-        title: requestData.issue || requestData.title,
-        description: requestData.description,
-        category: (requestData.issue_category || requestData.category || 'other').toLowerCase(),
-        priority: (requestData.priority_level || requestData.priority || 'medium').toLowerCase(),
-        unit_id: requestData.unit_id || null,
-        images: requestData.images || null,
-        attachments: requestData.attachments || null
-      };
+      // Create FormData if files are included
+      let body;
       
-      const response = await this.makeRequest('/requests', {
+      if (requestData instanceof FormData) {
+        body = requestData;
+      } else {
+        body = JSON.stringify({
+          title: requestData.issue || requestData.title,
+          description: requestData.description,
+          category: (requestData.issue_category || requestData.category || 'other').toLowerCase(),
+          priority: (requestData.priority_level || requestData.priority || 'medium').toLowerCase(),
+          unit_id: requestData.unit_id || null,
+          images: requestData.images || null,
+          attachments: requestData.attachments || null
+        });
+      }
+      
+      const response = await this.makeRequest('/requests/', {
         method: 'POST',
-        body: JSON.stringify(backendData),
+        body: body,
         baseURL: this.propertyBaseURL
       });
       
