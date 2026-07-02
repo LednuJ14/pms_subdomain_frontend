@@ -128,11 +128,25 @@ class ApiService {
     if (propertyId) {
       const hasPropertyParam = url.includes('property_id=') || url.includes('property_subdomain=');
       if (!hasPropertyParam) {
-        const separator = url.includes('?') ? '&' : '?';
-        // Try to convert to number if possible, otherwise use as string
-        const propertyParam = typeof propertyId === 'number' ? propertyId : 
-                             (!isNaN(propertyId) ? parseInt(propertyId) : propertyId);
-        url = `${url}${separator}property_id=${encodeURIComponent(propertyParam)}`;
+        // CRITICAL: Ensure the path portion has a trailing slash before adding query params
+        // Without this, Flask sends a 308 redirect that breaks CORS preflight requests
+        const qIndex = url.indexOf('?');
+        if (qIndex === -1) {
+          // No query string yet - ensure path ends with /
+          if (!url.endsWith('/')) {
+            url = url + '/';
+          }
+          url = `${url}?property_id=${encodeURIComponent(propertyId)}`;
+        } else {
+          // Already has query string - ensure path before ? ends with /
+          const pathPart = url.substring(0, qIndex);
+          const queryPart = url.substring(qIndex);
+          if (!pathPart.endsWith('/')) {
+            url = `${pathPart}/${queryPart}&property_id=${encodeURIComponent(propertyId)}`;
+          } else {
+            url = `${url}&property_id=${encodeURIComponent(propertyId)}`;
+          }
+        }
       }
     }
 
@@ -672,7 +686,7 @@ class ApiService {
       });
       
       const queryString = queryParams.toString();
-      const url = queryString ? `/announcements?${queryString}` : '/announcements';
+      const url = queryString ? `/announcements/?${queryString}` : '/announcements/';
       
       const response = await this.makeRequest(url);
       return { data: response };
